@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SimulIDE CE
+Comment=Electronic Circuit Simulator Community Edition
+Exec=simulide
+Icon=simulide
+Terminal=false
+Categories=Development;
+Type=Application
+MimeType=application/x-bittorrent;

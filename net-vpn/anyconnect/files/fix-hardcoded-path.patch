@@ -1,0 +1,158 @@
+--- anyconnect-linux64-4.10.04065-core-vpn-webdeploy-k9.sh	2022-04-04 18:09:08.490725077 +0300
++++ anyconnect-linux64-4.10.04065-core-vpn-webdeploy-k9.sh	2022-04-04 18:08:42.875501132 +0300
+@@ -69,15 +69,12 @@
+ LEGACY_UNINST=${LEGACY_BINDIR}/vpn_uninstall.sh
+ 
+ TARROOT="vpn"
+-INSTPREFIX=/opt/cisco/anyconnect
+ NVM_DIR="${INSTPREFIX}/NVM"
+-ROOTCERTSTORE=/opt/.cisco/certificates/ca
+ ROOTCACERT="DigiCertAssuredIDRootCA.pem"
+ ROOTCACERT_OLD="VeriSignClass3PublicPrimaryCertificationAuthority-G5.pem"
+ INIT_SRC="vpnagentd_init"
+ INIT="vpnagentd"
+ SYSTEMD_SRC="vpnagentd.service"
+-SYSTEMD_CONF_DIR="/etc/systemd/system"
+ BINDIR=${INSTPREFIX}/bin
+ LIBDIR=${INSTPREFIX}/lib
+ PROFILEDIR=${INSTPREFIX}/profile
+@@ -412,28 +409,28 @@
+ if [ -d "${NEWTEMP}/resources" ]; then
+     echo "Copying resources" >> /tmp/${LOGFNAME}
+     cp -R ${NEWTEMP}/resources ${INSTPREFIX}
+-    cp ${NEWTEMP}/resources/vpnui48.png /usr/share/icons/hicolor/48x48/apps/cisco-anyconnect.png
+-    cp ${NEWTEMP}/resources/vpnui64.png /usr/share/icons/hicolor/64x64/apps/cisco-anyconnect.png
+-    cp ${NEWTEMP}/resources/vpnui96.png /usr/share/icons/hicolor/96x96/apps/cisco-anyconnect.png
+-    cp ${NEWTEMP}/resources/vpnui128.png /usr/share/icons/hicolor/128x128/apps/cisco-anyconnect.png
+-    cp ${NEWTEMP}/resources/vpnui256.png /usr/share/icons/hicolor/256x256/apps/cisco-anyconnect.png
+-    cp ${NEWTEMP}/resources/vpnui512.png /usr/share/icons/hicolor/512x512/apps/cisco-anyconnect.png >/dev/null 2>&1
++    cp ${NEWTEMP}/resources/vpnui48.png ${ICONS_DIR}/hicolor/48x48/apps/cisco-anyconnect.png
++    cp ${NEWTEMP}/resources/vpnui64.png ${ICONS_DIR}/hicolor/64x64/apps/cisco-anyconnect.png
++    cp ${NEWTEMP}/resources/vpnui96.png ${ICONS_DIR}/hicolor/96x96/apps/cisco-anyconnect.png
++    cp ${NEWTEMP}/resources/vpnui128.png ${ICONS_DIR}/hicolor/128x128/apps/cisco-anyconnect.png
++    cp ${NEWTEMP}/resources/vpnui256.png ${ICONS_DIR}/hicolor/256x256/apps/cisco-anyconnect.png
++    cp ${NEWTEMP}/resources/vpnui512.png ${ICONS_DIR}/hicolor/512x512/apps/cisco-anyconnect.png >/dev/null 2>&1
+ else
+     echo "resources not found... Installation failed."
+     exitInstallation 1
+ fi
+ 
+ echo "Updating GTK icon cache" >> /tmp/${LOGFNAME}
+-gtk-update-icon-cache -f -t /usr/share/icons/hicolor >> /tmp/${LOGFNAME} 2>&1
++gtk-update-icon-cache -f -t ${ICONS_DIR}/hicolor >> /tmp/${LOGFNAME} 2>&1
+ 
+ if [ -f "${NEWTEMP}/cisco-anyconnect.menu" ]; then
+     echo "Installing ${NEWTEMP}/cisco-anyconnect.menu" >> /tmp/${LOGFNAME}
+-    mkdir -p /etc/xdg/menus/applications-merged || exitInstallation
++    mkdir -p ${XDG_MENUS_DIR}/applications-merged || exitInstallation
+     # there may be an issue where the panel menu doesn't get updated when the applications-merged
+     # folder gets created for the first time.
+     # This is an ubuntu bug. https://bugs.launchpad.net/ubuntu/+source/gnome-panel/+bug/369405
+ 
+-    ${INSTALL} -o root -m 644 ${NEWTEMP}/cisco-anyconnect.menu /etc/xdg/menus/applications-merged/
++    ${INSTALL} -o root -m 644 ${NEWTEMP}/cisco-anyconnect.menu ${XDG_MENUS_DIR}/applications-merged/
+ else
+     echo "${NEWTEMP}/anyconnect.menu does not exist. It will not be installed."
+ fi
+@@ -441,7 +438,7 @@
+ 
+ if [ -f "${NEWTEMP}/cisco-anyconnect.directory" ]; then
+     echo "Installing ${NEWTEMP}/cisco-anyconnect.directory" >> /tmp/${LOGFNAME}
+-    ${INSTALL} -o root -m 644 ${NEWTEMP}/cisco-anyconnect.directory /usr/share/desktop-directories/
++    ${INSTALL} -o root -m 644 ${NEWTEMP}/cisco-anyconnect.directory ${DESKTOP_DIRECTORIES_DIR}/
+ else
+     echo "${NEWTEMP}/anyconnect.directory does not exist. It will not be installed."
+ fi
+@@ -451,11 +448,11 @@
+ # after user logoff or reboot. This is neccessary on some gnome desktops.
+ if [ -f "${NEWTEMP}/com.cisco.anyconnect.gui.desktop" ]; then
+     echo "Installing ${NEWTEMP}/com.cisco.anyconnect.gui.desktop" >> /tmp/${LOGFNAME}
+-    ${INSTALL} -o root -m 644 ${NEWTEMP}/com.cisco.anyconnect.gui.desktop /usr/share/applications/
++    ${INSTALL} -o root -m 644 ${NEWTEMP}/com.cisco.anyconnect.gui.desktop ${APPLICATIONS_DIR}/
+     if [ -x "/usr/share/gnome-menus/update-gnome-menus-cache" ]; then
+-        for CACHE_FILE in $(ls /usr/share/applications/desktop.*.cache); do
++        for CACHE_FILE in $(ls ${APPLICATIONS_DIR}/desktop.*.cache); do
+             echo "updating ${CACHE_FILE}" >> /tmp/${LOGFNAME}
+-            /usr/share/gnome-menus/update-gnome-menus-cache /usr/share/applications/ > ${CACHE_FILE}
++            /usr/share/gnome-menus/update-gnome-menus-cache ${APPLICATIONS_DIR}/ > ${CACHE_FILE}
+         done
+     fi
+ else
+@@ -686,15 +683,6 @@
+   echo "(chkconfig not found or not used)" >> /tmp/${LOGFNAME}
+ fi
+ 
+-# Locate the init script directory
+-if [ -d "/etc/init.d" ]; then
+-  INITD="/etc/init.d"
+-elif [ -d "/etc/rc.d/init.d" ]; then
+-  INITD="/etc/rc.d/init.d"
+-else
+-  INITD="/etc/rc.d"
+-fi
+-
+ # BSD-style init scripts on some distributions will emulate SysV-style.
+ if [ "x${CHKCONFIG}" = "x" ]; then
+   if [ -d "/etc/rc.d" -o -d "/etc/rc0.d" ]; then
+@@ -716,61 +704,6 @@
+   fi
+ fi
+ 
+-TESTINIT=`ls -l /proc/1/exe`
+-if [ -z "${TESTINIT##*"systemd"*}" ]; then
+-  echo systemctl daemon-reexec >> /tmp/${LOGFNAME}
+-  systemctl daemon-reexec >> /tmp/${LOGFNAME} 2>&1
+-  # try stop vpnagentd service first in case user is upgrading from old version which doesn't have the proper unintall script
+-  echo systemctl stop ${INIT} >> /tmp/${LOGFNAME}
+-  systemctl stop ${INIT} >> /tmp/${LOGFNAME} 2>&1
+-  echo systemctl disable ${INIT} >> /tmp/${LOGFNAME}
+-  systemctl disable ${INIT} >> /tmp/${LOGFNAME} 2>&1
+-
+-  echo "install systemd" >> /tmp/${LOGFNAME}
+-  echo "Installing "${NEWTEMP}/${SYSTEMD_SRC} >> /tmp/${LOGFNAME}
+-  echo ${INSTALL} -o root -m 644 ${NEWTEMP}/${SYSTEMD_SRC} ${SYSTEMD_CONF_DIR}/${SYSTEMD_SRC} >> /tmp/${LOGFNAME}
+-  ${INSTALL} -o root -m 644 ${NEWTEMP}/${SYSTEMD_SRC} ${SYSTEMD_CONF_DIR}/${SYSTEMD_SRC} || exitInstallation 1
+-
+-  echo systemctl enable ${INIT} >> /tmp/${LOGFNAME}
+-  systemctl enable ${INIT} >> /tmp/${LOGFNAME} 2>&1
+-
+-  echo "Starting ${CLIENTNAME} Agent..."
+-  echo "Starting ${CLIENTNAME} Agent..." >> /tmp/${LOGFNAME}
+-
+-  echo systemctl start ${INIT} >> /tmp/${LOGFNAME}
+-  systemctl start ${INIT} >> /tmp/${LOGFNAME} 2>&1 || exitInstallation 1
+-elif [ "x${INITD}" != "x" ]; then
+-  echo "no install systemd" >> /tmp/${LOGFNAME}
+-  echo "Installing "${NEWTEMP}/${INIT_SRC} >> /tmp/${LOGFNAME}
+-  echo ${INSTALL} -o root -m 755 ${NEWTEMP}/${INIT_SRC} ${INITD}/${INIT} >> /tmp/${LOGFNAME}
+-  ${INSTALL} -o root -m 755 ${NEWTEMP}/${INIT_SRC} ${INITD}/${INIT} || exitInstallation 1
+-  if [ "x${CHKCONFIG}" != "x" ]; then
+-    echo ${CHKCONFIG} --add ${INIT} >> /tmp/${LOGFNAME}
+-    ${CHKCONFIG} --add ${INIT}
+-  else
+-    if [ "x${BSDINIT}" != "x" ]; then
+-      for LEVEL in ${SYSVLEVELS}; do
+-        DIR="rc${LEVEL}.d"
+-        if [ ! -d "${RCD}/${DIR}" ]; then
+-          mkdir ${RCD}/${DIR}
+-          chmod 755 ${RCD}/${DIR}
+-        fi
+-        ln -sf ${INITD}/${INIT} ${RCD}/${DIR}/${SYSVSTART}${INIT}
+-        ln -sf ${INITD}/${INIT} ${RCD}/${DIR}/${SYSVSTOP}${INIT}
+-      done
+-    fi
+-  fi
+-
+-  # Attempt to start up the agent
+-  echo "Starting ${CLIENTNAME} Agent..."
+-  echo "Starting ${CLIENTNAME} Agent..." >> /tmp/${LOGFNAME}
+-  
+-  echo ${INITD}/${INIT} start >> /tmp/${LOGFNAME}
+-  logger "Starting ${CLIENTNAME} Agent..."
+-  ${INITD}/${INIT} start >> /tmp/${LOGFNAME} || exitInstallation 1
+-
+-fi
+-
+ # Generate/update the VPNManifest.dat file
+ if [ -f ${BINDIR}/manifesttool_vpn ]; then  
+   ${BINDIR}/manifesttool_vpn -i ${INSTPREFIX} ${INSTPREFIX}/ACManifestVPN.xml
