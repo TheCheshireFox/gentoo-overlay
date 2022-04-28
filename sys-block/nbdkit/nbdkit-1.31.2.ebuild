@@ -19,9 +19,6 @@ RDEPEND="${DEPEND}
 	dev-lang/perl
 	dev-perl/Pod-Parser
 	virtual/perl-Pod-Simple
-	sys-libs/zlib
-	app-arch/xz-utils
-	app-arch/zstd
 	net-misc/curl
 	>=net-libs/libssh-0.8.0
 	>=sys-block/nbd-0.9.8"
@@ -32,7 +29,11 @@ src_unpack() {
 	mv "nbdkit-v${PV}" "${P}"
 }
 
-src_configure() {
+src_prepare() {
+	default
 	eautoreconf
+}
+
+src_configure() {
 	econf --disable-perl --disable-python --disable-ocaml --disable-rust --disable-ruby --disable-tcl --disable-lua --disable-golang --disable-libguestfs-tests --disable-torrent --disable-vddk --without-iconv --without-iso --without-libvirt --without-zlib --without-liblzma --without-libzstd --without-libguestfs --without-ext2
 }
